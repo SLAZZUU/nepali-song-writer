@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Horeb Song Writer — Nepali Songwriting Notebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Noto+Serif+Devanagari:wght@400;500;600;700&family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #241a26;
+    --bg-deep: #1c141e;
+    --panel: #2c212f;
+    --panel-hi: #362a3a;
+    --field-bg: #4a3c4e;
+    --field-bg-hover: #58485c;
+    --paper: #f4e9cd;
+    --paper-edge: #e6d6ac;
+    --rule: rgba(60, 44, 30, 0.12);
+    --ink: #ece2d0;
+    --ink-dim: #a9998f;
+    --ink-dark: #2c2013;
+    --ink-dark-soft: #5a4a38;
+    --maroon: #b4443e;
+    --maroon-hi: #cf5b52;
+    --gold: #d4a94a;
+    --gold-hi: #e6c06e;
+    --teal: #4c8c82;
+    --danger: #c15a4d;
+    --radius: 10px;
+    --shadow: 0 12px 32px rgba(0,0,0,0.35);
+  }
+  *{ box-sizing: border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(212,169,74,0.06), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(180,68,62,0.07), transparent 45%);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection{ background: var(--gold); color: var(--ink-dark); }
+
+  .app-shell{
+    display:grid;
+    grid-template-columns: 260px 1fr;
+    height:100vh;
+    min-height:560px;
+  }
+  .song-browser{
+    display:flex; flex-direction:column;
+    flex:1; min-height:0;
+  }
+  #sidebarCollapseBtn{
+    display:none;
+    width:100%; justify-content:center;
+    margin-top:8px;
+  }
+
+    /* ---------- Sidebar ---------- */
+  .sidebar{
+    background: var(--bg-deep);
+    border-right: 1px solid rgba(212,169,74,0.18);
+    display:flex; flex-direction:column;
+    padding: 18px 14px;
+    overflow:hidden;
+  }
+  .brand{
+    display:flex; align-items:baseline; gap:8px;
+    padding: 4px 4px 14px 4px;
+    border-bottom: 1px solid rgba(212,169,74,0.18);
+    margin-bottom: 14px;
+  }
+  .brand .devnagari{
+    font-family:'Yatra One', cursive;
+    font-size: 26px;
+    color: var(--gold-hi);
+    line-height:1;
+  }
+  .brand .sub{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-size: 12.5px;
+    color: var(--ink-dim);
+  }
+  .sidebar-collapse-btn{
+    display:none;
+  }
+  .btn-new{
+    background: linear-gradient(180deg, var(--maroon-hi), var(--maroon));
+    color: #fff2ea;
+    border:none;
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-family:'Inter'; font-weight:600; font-size:13.5px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    box-shadow: 0 4px 14px rgba(180,68,62,0.35);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .btn-new:hover{ transform: translateY(-1px); box-shadow: 0 6px 18px rgba(180,68,62,0.45); }
+  .btn-new:active{ transform: translateY(0); }
+
+  .song-search{
+    width:100%; margin-top:10px;
+    background: var(--panel);
+    border: 1px solid rgba(212,169,74,0.2);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 9px 11px;
+    font-family:'Noto Serif Devanagari','Inter', sans-serif; font-size:13px;
+    outline:none;
+    box-sizing:border-box;
+  }
+  .song-search::placeholder{ color: var(--ink-dim); font-family:'Inter', sans-serif; }
+  .song-search:focus{ border-color: rgba(212,169,74,0.5); }
+
+  .song-list{
+    margin-top:14px;
+    overflow-y:auto;
+    flex:1;
+    display:flex; flex-direction:column; gap:4px;
+    padding-right:2px;
+  }
+  .song-list::-webkit-scrollbar{ width:6px; }
+  .song-list::-webkit-scrollbar-thumb{ background: rgba(212,169,74,0.25); border-radius:4px; }
+
+  .song-item{
+    display:flex; align-items:center; justify-content:space-between; gap:6px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor:pointer;
+    color: var(--ink-dim);
+    border: 1px solid transparent;
+  }
+  .song-item:hover{ background: var(--panel); color: var(--ink); }
+  .song-item.active{
+    background: var(--panel-hi);
+    color: var(--ink);
+    border-color: rgba(212,169,74,0.35);
+  }
+  .song-item .name{
+    font-size:13.5px; font-weight:500;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .num-badge{
+    color: var(--gold-hi); font-family:'JetBrains Mono', monospace; font-weight:700;
+    font-size:11px; margin-right:7px; opacity:0.9;
+  }
+  .song-item .del{
+    opacity:0; background:none; border:none; color: var(--ink-dim); cursor:pointer;
+    font-size:14px; line-height:1; padding:2px 4px; border-radius:4px;
+  }
+  .song-item:hover .del{ opacity:0.75; }
+  .song-item .del:hover{ opacity:1; color: var(--danger); background: rgba(193,90,77,0.12); }
+
+  .empty-songs{
+    color: var(--ink-dim); font-size:13px; line-height:1.6;
+    padding: 18px 8px; text-align:center;
+  }
+
+  .sidebar-foot{
+    border-top: 1px solid rgba(212,169,74,0.18);
+    padding-top: 10px; margin-top: 8px;
+    font-size: 11px; color: var(--ink-dim); line-height:1.5;
+  }
+  .file-btn-row{
+    display:flex; gap:6px; margin-top:8px;
+  }
+  .file-btn-row .icon-btn{
+    flex:1; justify-content:center;
+    padding: 8px 6px; font-size:12px;
+  }
+
+  /* ---------- Main ---------- */
+  .main{
+    display:flex; flex-direction:column;
+    overflow:hidden;
+  }
+  .topbar{
+    display:flex; align-items:center; gap:10px;
+    padding: 14px 22px;
+    border-bottom: 1px solid rgba(212,169,74,0.16);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    flex-wrap:wrap;
+  }
+
+  .toggle-row{
+    display:flex; align-items:center; gap:8px;
+    margin-left:auto;
+    flex-wrap:wrap;
+  }
+  .mode-toggle{
+    display:flex; align-items:center; background: var(--panel);
+    border-radius: 999px; padding:3px; gap:2px;
+    border:1px solid rgba(212,169,74,0.2);
+  }
+  .mode-toggle button{
+    border:none; background:transparent; color: var(--ink-dim);
+    font-family:'Inter'; font-size:12px; font-weight:600;
+    padding: 7px 12px; border-radius:999px; cursor:pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .mode-toggle button.active{
+    background: var(--gold); color: var(--ink-dark);
+  }
+
+  .icon-btn{
+    background: var(--panel);
+    border: 1px solid rgba(212,169,74,0.2);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size:12.5px;
+    font-family:'Inter'; font-weight:500;
+    cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+  }
+  .icon-btn:hover{ background: var(--panel-hi); border-color: rgba(212,169,74,0.4); }
+
+  .dhaka-rule{
+    height: 9px;
+    width:100%;
+    flex: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='9' viewBox='0 0 24 9'%3E%3Cpath d='M0 4.5 L6 0 L12 4.5 L18 0 L24 4.5 L18 9 L12 4.5 L6 9 Z' fill='none' stroke='%23d4a94a' stroke-width='0.9' opacity='0.55'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-size: 24px 9px;
+  }
+
+  .stage{
+    flex:1; overflow-y:auto;
+    padding: 26px 26px 80px 26px;
+    display:flex; justify-content:center;
+  }
+  .stage::-webkit-scrollbar{ width:8px; }
+  .stage::-webkit-scrollbar-thumb{ background: rgba(212,169,74,0.2); border-radius:4px; }
+
+  .sheet{
+    width:100%; max-width: 760px;
+    display:flex; flex-direction:column; gap:18px;
+  }
+
+  .title-row{
+    display:flex; align-items:flex-end; gap:14px;
+    border-bottom: 2px solid rgba(212,169,74,0.3);
+    padding-bottom: 8px;
+  }
+  .title-input{
+    background: var(--field-bg);
+    border: 1px solid rgba(212,169,74,0.28);
+    border-radius: 10px;
+    outline:none;
+    box-sizing: border-box;
+    color: var(--ink);
+    font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+    font-size: 30px;
+    padding: 10px 14px;
+    width:100%;
+    transition: background-color .15s ease, border-color .15s ease;
+  }
+  .title-input:hover{ background: var(--field-bg-hover); }
+  .title-input:focus{ background: var(--field-bg-hover); border-color: rgba(212,169,74,0.6); }
+  .title-input::placeholder{ color: var(--ink-dim); font-style:italic; }
+  .song-number{
+    display:flex; align-items:center; gap:3px;
+    color: var(--gold-hi);
+    font-family:'JetBrains Mono', monospace; font-size:15px; font-weight:600;
+    flex:none; padding-bottom:6px;
+    white-space:nowrap;
+  }
+  .song-number input{
+    width:52px;
+    background: var(--panel);
+    border: 1px solid rgba(212,169,74,0.3);
+    color: var(--ink);
+    border-radius:6px;
+    padding: 5px 4px;
+    font-family:'JetBrains Mono', monospace; font-size:14px; text-align:center;
+    outline:none;
+  }
+  .song-info-input{
+    display:block;
+    width:100%;
+    box-sizing: border-box;
+    background: var(--field-bg);
+    border: 1px solid rgba(212,169,74,0.22);
+    border-radius: 8px;
+    outline:none;
+    color: var(--gold-hi);
+    font-family:'JetBrains Mono', monospace; font-size:12.5px;
+    padding: 8px 12px;
+    transition: background-color .15s ease, border-color .15s ease;
+  }
+  .song-info-input:hover{ background: var(--field-bg-hover); }
+  .song-info-input:focus{ background: var(--field-bg-hover); border-color: rgba(212,169,74,0.5); }
+  .song-info-input::placeholder{ color: var(--ink-dim); }
+
+  .helper-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    flex-wrap:wrap;
+  }
+  .hint{
+    font-size:12px; color: var(--ink-dim); line-height:1.5;
+  }
+  .hint b{ color: var(--gold-hi); font-weight:600; }
+
+  .section-block{
+    background: var(--paper);
+    color: var(--ink-dark);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    border: 1px solid var(--paper-edge);
+    border-left: 7px solid var(--teal);
+  }
+  .section-block[data-type="Chorus"]{ border-left-color: var(--maroon); }
+  .section-block[data-type="Chorus"] .section-pill,
+  .section-block[data-type="Chorus"] .section-type-select{ background: var(--maroon); color:#fff2ea; }
+  .section-block[data-type="Bridge"],
+  .section-block[data-type="Pre-Chorus"]{ border-left-color: var(--gold); }
+  .section-block[data-type="Intro"],
+  .section-block[data-type="Outro"],
+  .section-block[data-type="Interlude"]{ border-left-color: var(--ink-dark-soft); }
+  .section-head{
+    display:flex; align-items:center; gap:8px;
+    padding: 10px 14px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.05), transparent);
+    border-bottom: 1px solid var(--rule);
+  }
+  .section-pill{
+    font-family:'Fraunces', serif; font-weight:600; font-style:italic;
+    font-size: 14.5px;
+    color: var(--maroon);
+    background: rgba(180,68,62,0.1);
+    padding: 3px 12px;
+    border-radius: 999px;
+  }
+  .section-type-select{
+    font-family:'Fraunces', serif; font-weight:600; font-style:italic;
+    font-size: 14px;
+    color: var(--maroon);
+    background: rgba(180,68,62,0.1);
+    border: none;
+    padding: 5px 10px;
+    border-radius: 999px;
+    cursor:pointer;
+  }
+  .section-ordinal{
+    font-family:'JetBrains Mono', monospace; font-size:11.5px;
+    color: var(--ink-dark-soft);
+  }
+
+  .lines-editor{
+    width:100%;
+    min-height: 96px;
+    resize: vertical;
+    border:none; outline:none;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent, transparent 30px,
+        var(--rule) 31px, var(--rule) 32px
+      );
+    background-position: 0 46px;
+    padding: 14px 16px;
+    font-family:'Noto Serif Devanagari','Fraunces', serif;
+    font-size: 17px;
+    line-height: 32px;
+    color: var(--ink-dark);
+  }
+  .lines-editor::placeholder{ color: var(--ink-dark-soft); font-family:'Fraunces', serif; font-style:italic; }
+
+  .preview{
+    padding: 6px 16px 16px 16px;
+    border-top: 1px dashed var(--rule);
+  }
+  .preview-label{
+    font-size:10.5px; letter-spacing:0.09em; text-transform:uppercase;
+    color: var(--ink-dark-soft); font-weight:600;
+    margin-bottom:6px;
+  }
+  .preview-empty{ font-size:13px; color: var(--ink-dark-soft); font-style:italic; }
+  .pline{ margin-bottom: 22px; line-height:1; }
+  .chunk{ position:relative; display:inline-block; white-space:pre; }
+  .chunk .chord{
+    position:absolute; top:-19px; left:0;
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:12.5px;
+    color: var(--maroon);
+    white-space:nowrap;
+  }
+  .chunk .lyric{
+    font-family:'Noto Serif Devanagari','Fraunces', serif;
+    font-size:17px; color: var(--ink-dark);
+  }
+
+  .add-section-row{
+    display:flex; align-items:center; gap:8px;
+    justify-content:center;
+    padding: 4px 0;
+  }
+  .add-section-row select{
+    background: var(--panel); color: var(--ink);
+    border: 1px solid rgba(212,169,74,0.3);
+    border-radius:8px; padding:9px 10px; font-family:'Inter'; font-size:13px;
+  }
+  .add-section-row button{
+    background: var(--gold); color: var(--ink-dark);
+    border:none; font-weight:700; font-size:13px;
+    border-radius:8px; padding:9px 14px; cursor:pointer;
+  }
+
+
+  .print-multi-wrap{ display:none; }
+  @media print{
+    body.printing-multi .app-shell{ display:none !important; }
+    body:not(.printing-multi) .print-multi-wrap{ display:none !important; }
+    body.printing-multi .print-multi-wrap{ display:block !important; background:#fff; }
+    .print-song{ page-break-after: always; padding: 10px 0 0 0; }
+    .print-song:last-child{ page-break-after: auto; }
+    .print-title{
+      font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+      font-size:28px; color:#000; border-bottom:2px solid #333;
+      padding-bottom:8px; margin-bottom:16px;
+    }
+    .print-num{ font-family:'JetBrains Mono', monospace; color:#7a1f1a; margin-right:8px; }
+    .print-info{ font-family:'JetBrains Mono', monospace; font-size:14px; color:#444; margin:-10px 0 14px 0; }
+  }
+
+  .print-by-number{
+    display:flex; align-items:center; gap:6px;
+    background: var(--panel);
+    border: 1px solid rgba(212,169,74,0.2);
+    border-radius: 8px;
+    padding: 3px 6px 3px 10px;
+  }
+  .print-by-number span{ font-size:11.5px; color: var(--ink-dim); }
+  .print-by-number input{
+    width:92px;
+    background: var(--bg-deep);
+    border: 1px solid rgba(212,169,74,0.3);
+    color: var(--ink);
+    border-radius:6px; padding:6px 6px; font-size:12.5px; text-align:center;
+    font-family:'JetBrains Mono', monospace; outline:none;
+  }
+  .print-by-number button{
+    background:none; border:none; color: var(--gold-hi); cursor:pointer;
+    font-size:12.5px; font-weight:600; padding:6px 8px;
+  }
+
+  /* ---------- OCR / photo-import modal ---------- */
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0; z-index:100;
+    background: rgba(15,10,16,0.72);
+    align-items:center; justify-content:center;
+    padding: 24px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal{
+    background: var(--panel);
+    border: 1px solid rgba(212,169,74,0.25);
+    border-radius: 14px;
+    width: 100%; max-width: 660px;
+    max-height: 86vh;
+    overflow-y:auto;
+    padding: 20px 22px 22px 22px;
+    box-shadow: var(--shadow);
+  }
+  .modal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .modal-head h3{
+    margin:0; font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+    font-size:19px; color: var(--gold-hi);
+  }
+  .modal-head button{
+    background:none; border:none; color: var(--ink-dim); font-size:18px; cursor:pointer;
+  }
+  .ocr-thumb{
+    width:100%; max-height:200px; object-fit:contain;
+    background: var(--bg-deep); border-radius:8px; margin-bottom:14px;
+    border: 1px solid rgba(212,169,74,0.15);
+  }
+  .ocr-status{ font-size:13px; color: var(--ink-dim); margin-bottom:8px; }
+  .ocr-progress{
+    height:6px; background: var(--bg-deep); border-radius:4px; overflow:hidden;
+  }
+  .ocr-progress-bar{
+    height:100%; width:0%; background: var(--gold);
+    transition: width .2s ease;
+  }
+  .ocr-hint{ font-size:12.5px; color: var(--ink-dim); line-height:1.6; margin-bottom:14px; }
+  .ocr-block{
+    display:flex; gap:10px; margin-bottom:10px;
+    background: var(--paper); border-radius:8px; padding:8px;
+  }
+  .ocr-block select{
+    flex:none; width:104px; height:34px;
+    background: var(--bg-deep); color: var(--ink);
+    border:1px solid rgba(212,169,74,0.3); border-radius:6px; font-size:11.5px;
+    align-self:flex-start;
+  }
+  .ocr-block textarea{
+    flex:1; min-height:64px; resize:vertical;
+    border:none; outline:none; background:transparent;
+    color: var(--ink-dark);
+    font-family:'Noto Serif Devanagari', serif; font-size:15px; line-height:1.6;
+  }
+  .ocr-actions{
+    display:flex; align-items:center; gap:8px; margin-top:6px;
+  }
+  .ocr-actions .icon-btn{ background: var(--bg-deep); }
+  .ocr-actions label{ display:flex; align-items:center; gap:6px; }
+
+  /* Print view */
+  @media print{
+    .sidebar, .topbar, .chord-toolbar, .add-section-row, .lines-editor, .helper-row, .dhaka-rule, .modal-overlay, .song-number { display:none !important; }
+    body{ background:#fff; color:#000; }
+    .stage{ overflow:visible; padding:0; }
+    .sheet{ max-width:100%; gap:6px; }
+    .section-block{ box-shadow:none; border:none; break-inside: avoid; background:#fff; color:#000; margin-bottom:8px; }
+    .section-head{ padding: 4px 4px; border-bottom: none !important; }
+    .preview{ padding: 2px 4px 6px 4px; border-top: none !important; }
+    .pline{ margin-bottom: 17px; }
+    .chunk .chord{ top:-16px; color:#7a1f1a !important; font-size:15px; }
+    .chunk .lyric, .preview-label{ color:#000; font-size:20px; }
+    .title-input{ color:#000; background:none !important; border:none !important; border-bottom:2px solid #333 !important; padding:0 !important; border-radius:0 !important; }
+    .section-pill, .section-type-select{ color:#7a1f1a !important; background:none !important; padding-left:0 !important; font-size:16px; }
+    .section-block[data-type="Chorus"] .section-pill{ font-weight:800; }
+    .section-block[data-type="Chorus"] .chunk .lyric{ font-weight:700; }
+  }
+
+  /* Mobile overrides — kept LAST so they win the cascade over all base rules above */
+  @media (max-width: 760px){
+    .app-shell{
+      display:flex;
+      flex-direction:column;
+      height: 100vh;
+    }
+    .sidebar{
+      flex: none;
+      max-height: 52vh;
+      border-right: none;
+      border-bottom: 1px solid rgba(212,169,74,0.18);
+      padding: 10px 12px;
+    }
+    .main{
+      flex: 1;
+      min-height: 0;
+    }
+    .brand{ padding-bottom:8px; margin-bottom:8px; }
+    .btn-new{ padding:8px 12px; }
+    #sidebarCollapseBtn{ display:flex; }
+    .song-browser{ display:none; }
+    .song-browser.mobile-visible{ display:flex; }
+    .song-search{ margin-top:6px; padding:7px 10px; }
+    .song-list{ margin-top:8px; min-height: 110px; }
+    .sidebar-foot{ padding-top:6px; margin-top:6px; }
+    .file-btn-row{ margin-top:6px; }
+    .stage{ padding: 16px 12px 60px 12px; }
+    .sheet{ gap:14px; }
+    .title-row{ flex-wrap:wrap; gap:8px; }
+    .title-input{ font-size:23px; }
+    .topbar{ padding: 10px 12px; gap:6px; }
+    .toggle-row{ margin-left:0; gap:6px; }
+    .icon-btn{ padding:9px 12px; font-size:13px; }
+    .mode-toggle button{ padding:8px 10px; font-size:11px; }
+    .print-by-number{ padding: 3px 6px 3px 8px; }
+    .print-by-number input{ width:64px; }
+    .lines-editor{ font-size:16px; }
+    .chunk .lyric{ font-size:16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="devnagari">Horeb</span>
+      <span class="sub">Song Writer</span>
+    </div>
+    <button class="btn-new" id="newSongBtn">+ नयाँ गीत &nbsp;·&nbsp; New song</button>
+    <button class="icon-btn" id="sidebarCollapseBtn">📋 <span class="btn-text">Show song list</span></button>
+    <div class="song-browser" id="songBrowser">
+      <input type="text" class="song-search" id="songSearchInput" placeholder="Search" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div class="song-list" id="songList"></div>
+    </div>
+    <div class="sidebar-foot">
+      <div id="dbStatus">Songs auto-save in this browser.</div>
+      <div class="file-btn-row">
+        <button class="icon-btn" id="saveFileBtn">💾 Save</button>
+        <button class="icon-btn" id="openFileBtn">📂 Open</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="toggle-row">
+        <div class="mode-toggle" id="modeToggle">
+          <button data-mode="roman" class="active">Roman → नेपाली</button>
+          <button data-mode="direct">Direct देवनागरी</button>
+        </div>
+        <button class="icon-btn" id="importPhotoBtn" title="Import photo">📷 <span class="btn-text">Import photo</span></button>
+        <input type="file" id="photoFileInput" accept="image/*" style="display:none">
+        <button class="icon-btn" id="printBtn" title="Print current song">🖨 <span class="btn-text">Print</span></button>
+        <div class="print-by-number">
+          <span>गीत नं.</span>
+          <input type="text" id="printNumberInput" placeholder="1,3,5-8" title="Song numbers, comma-separated or ranges">
+          <button id="printByNumberBtn">Print</button>
+        </div>
+      </div>
+    </div>
+    <div class="dhaka-rule"></div>
+
+    <div class="stage">
+      <div class="sheet">
+        <div class="title-row">
+          <input class="title-input" id="titleInput" placeholder="गीतको शीर्षक — Song title" autocapitalize="off" autocorrect="off" spellcheck="false" />
+          <div class="song-number"><span>#</span><input type="number" id="songNumberInput" min="1" title="Song number"></div>
+        </div>
+        <input class="song-info-input" id="songInfoInput" placeholder="Key: ...  Time: ...  Intro: ...">
+
+        <div class="helper-row">
+          <div class="hint">Wrap chords in <b>[C]</b> before a word, e.g. <b>[C]म [G]तिमीलाई [Am]माया गर्छु</b> — it'll float above the lyric.</div>
+        </div>
+
+        <div class="add-section-row">
+          <select id="sectionTypeSelect">
+            <option value="Verse">Verse</option>
+            <option value="Pre-Chorus">Pre-Chorus</option>
+            <option value="Chorus">Chorus</option>
+            <option value="Bridge">Bridge</option>
+            <option value="Intro">Intro</option>
+            <option value="Interlude">Interlude</option>
+            <option value="Outro">Outro</option>
+          </select>
+          <button id="addSectionBtn">+ Add section</button>
+        </div>
+
+        <div id="sectionsWrap"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="ocrModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>फोटो → बोल · Photo → Lyrics</h3>
+      <button id="ocrCloseBtn">✕</button>
+    </div>
+    <div class="modal-body" id="ocrModalBody"></div>
+  </div>
+</div>
+
+<div class="print-multi-wrap" id="printMultiWrap"></div>
+
+<script>
+(function(){
+
+/* ============================================================
+   0. STORAGE — Claude artifact storage with localStorage fallback
+   ============================================================ */
+const hasClaudeStorage = (typeof window.storage !== 'undefined' && window.storage);
+
+async function storeGet(key){
+  if(hasClaudeStorage){
+    try{ const r = await window.storage.get(key, false); return r ? r.value : null; }
+    catch(e){ /* not found / unavailable */ }
+  }
+  try{ return localStorage.getItem(key); }catch(e){ return null; }
+}
+async function storeSet(key, value){
+  let ok = false;
+  if(hasClaudeStorage){
+    try{ const r = await window.storage.set(key, value, false); ok = !!r; }catch(e){}
+  }
+  try{ localStorage.setItem(key, value); ok = true; }catch(e){}
+  return ok;
+}
+async function storeDelete(key){
+  if(hasClaudeStorage){ try{ await window.storage.delete(key, false); }catch(e){} }
+  try{ localStorage.removeItem(key); }catch(e){}
+}
+
+/* ============================================================
+   0b. FILE DATABASE — songs.txt as the real load/save target
+   (uses the File System Access API where the browser allows it;
+   the handle is remembered in IndexedDB so, after one initial
+   connect, the file auto-loads and auto-saves with no buttons)
+   ============================================================ */
+let dbFileHandle = null;
+let dbFileName = null;
+const hasFileSystemAccessAPI = typeof window.showOpenFilePicker === 'function' && typeof window.showSaveFilePicker === 'function';
+// Browsers block the File System Access API inside a cross-origin iframe by
+// default (e.g. this app embedded on a Wix/Squarespace page) — the API may
+// exist but every call fails immediately. Detect that so we can explain it
+// instead of showing a bare "could not create that file" error.
+const isEmbeddedFrame = (function(){
+  try{ return window.self !== window.top; }catch(e){ return true; }
+})();
+const supportsFileSystemAccess = hasFileSystemAccessAPI && !isEmbeddedFrame;
+
+function setDbStatus(text){
+  const el = document.getElementById('dbStatus');
+  if(el) el.textContent = text;
+}
+
+const IDB_NAME = 'geetbahi-fs', IDB_STORE = 'handles', IDB_KEY = 'songsFile';
+function idbOpen(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = ()=> req.result.createObjectStore(IDB_STORE);
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function idbSetHandle(handle){
+  try{
+    const db = await idbOpen();
+    await new Promise((res, rej)=>{
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put(handle, IDB_KEY);
+      tx.oncomplete = res; tx.onerror = ()=> rej(tx.error);
+    });
+  }catch(e){ /* IndexedDB unavailable — file just won't auto-reconnect next time */ }
+}
+async function idbGetHandle(){
+  try{
+    const db = await idbOpen();
+    return await new Promise((res, rej)=>{
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+      req.onsuccess = ()=> res(req.result || null);
+      req.onerror = ()=> rej(req.error);
+    });
+  }catch(e){ return null; }
+}
+
+async function writeDatabaseFile(){
+  if(!dbFileHandle) return;
+  try{
+    const all = [];
+    for(const entry of songsIndex){
+      const s = await loadSong(entry.id);
+      if(s) all.push(s);
+    }
+    const writable = await dbFileHandle.createWritable();
+    await writable.write(JSON.stringify({ app:'horeb-song-writer', songs: all }, null, 2));
+    await writable.close();
+    setDbStatus('Auto-synced to ' + dbFileName + ' · ' + new Date().toLocaleTimeString());
+  }catch(e){
+    console.error('Could not write songs file', e);
+    setDbStatus('Could not save to ' + dbFileName + ' — is it still available?');
+  }
+}
+
+async function importDatabaseText(text){
+  let parsed;
+  try{ parsed = JSON.parse(text); }
+  catch(e){ alert('त्यो फाइल पढ्न सकिएन — this doesn\'t look like a Horeb Song Writer songs file.'); return false; }
+  const songs = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.songs) ? parsed.songs : null);
+  if(!songs){ alert('त्यो फाइल पढ्न सकिएन — this doesn\'t look like a Horeb Song Writer songs file.'); return false; }
+
+  songsIndex = songs.map(s => ({ id: s.id, title: s.title || '', number: s.number || null, updatedAt: Date.now() }));
+  for(const s of songs){ await storeSet('geetbahi:song:' + s.id, JSON.stringify(s)); }
+  await saveIndex();
+  if(songsIndex.length){
+    const sorted = [...songsIndex].sort((a,b)=>(a.number||0)-(b.number||0));
+    await selectSong(sorted[0].id);
+  } else {
+    await createSong();
+  }
+  return true;
+}
+
+// Tries to silently reconnect to a previously-approved file with no click
+// needed. Returns true if a file was actually loaded from.
+async function tryAutoConnectFile(){
+  if(!supportsFileSystemAccess) return false;
+  const handle = await idbGetHandle();
+  if(!handle) return false;
+  try{
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    if(perm !== 'granted') return false;
+    const file = await handle.getFile();
+    const text = await file.text();
+    const ok = await importDatabaseText(text);
+    if(ok){
+      dbFileHandle = handle;
+      dbFileName = handle.name;
+      setDbStatus('Auto-synced to ' + dbFileName);
+    }
+    return ok;
+  }catch(e){ return false; }
+}
+
+// One combined "connect" action: pick an existing file, or offer to create
+// one if the user cancels the picker. After this runs once, the file is
+// remembered and reconnects automatically on future visits — no buttons.
+// Explicit "Open" — load an existing songs file and make it the ongoing
+// auto-sync target (every future edit keeps writing to it automatically).
+async function openSongFileExplicit(){
+  if(!supportsFileSystemAccess){
+    alert('File open/save needs Chrome or Edge, opened directly (not embedded, not this preview).');
+    return;
+  }
+  let handle;
+  try{
+    [handle] = await window.showOpenFilePicker({
+      types: [{ description:'Horeb Song Writer songs file', accept: { 'text/plain': ['.txt'] } }]
+    });
+  }catch(e){
+    if(e && e.name !== 'AbortError') alert('त्यो फाइल खोल्न सकिएन — could not open that file.' + (e && e.message ? ('\n\n(' + e.name + ': ' + e.message + ')') : ''));
+    return;
+  }
+  if(songsIndex.length && !confirm('यो फाइल खोल्दा अहिलेको गीतहरू प्रतिस्थापन हुनेछ। This will replace the songs currently loaded here. Continue?')) return;
+  try{
+    const file = await handle.getFile();
+    const text = await file.text();
+    const ok = await importDatabaseText(text);
+    if(ok){
+      dbFileHandle = handle;
+      dbFileName = handle.name;
+      await idbSetHandle(handle);
+      setDbStatus('Auto-synced to ' + dbFileName);
+    }
+  }catch(e){ alert('त्यो फाइल पढ्न सकिएन — could not read that file.' + (e && e.message ? ('\n\n(' + e.name + ': ' + e.message + ')') : '')); }
+}
+
+// Explicit "Save" — if a file is already connected, force an immediate write
+// right now; otherwise prompts to create one (which then also becomes the
+// ongoing auto-sync target, same as Open does).
+async function saveSongFileExplicit(){
+  if(dbFileHandle){
+    await writeDatabaseFile();
+    return;
+  }
+  if(!supportsFileSystemAccess){
+    alert('File open/save needs Chrome or Edge, opened directly (not embedded, not this preview).');
+    return;
+  }
+  try{
+    const handle = await window.showSaveFilePicker({
+      suggestedName: 'horeb-songs.txt',
+      types: [{ description:'Horeb Song Writer songs file', accept: { 'text/plain': ['.txt'] } }]
+    });
+    dbFileHandle = handle;
+    dbFileName = handle.name;
+    await idbSetHandle(handle);
+    await writeDatabaseFile();
+  }catch(e){ if(e && e.name !== 'AbortError') alert('त्यो फाइल बनाउन सकिएन — could not create that file.' + (e && e.message ? ('\n\n(' + e.name + ': ' + e.message + ')') : '')); }
+}
+
+/* ============================================================
+   1. TRANSLITERATION ENGINE (Romanized Nepali -> Devanagari)
+   ============================================================ */
+const VOWELS_INDEP = {
+  'a':'अ','aa':'आ','A':'आ','i':'इ','ee':'ई','I':'ई','u':'उ','oo':'ऊ','U':'ऊ',
+  'e':'ए','ai':'ऐ','o':'ओ','au':'औ'
+};
+const VOWELS_MATRA = {
+  'a':'','aa':'ा','A':'ा','i':'ि','ee':'ी','I':'ी','u':'ु','oo':'ू','U':'ू',
+  'e':'े','ai':'ै','o':'ो','au':'ौ'
+};
+const CONSONANTS = {
+  'kh':'ख','gh':'घ',
+  'chh':'छ','ch':'च','jh':'झ',
+  'Th':'ठ','Dh':'ढ','T':'ट','D':'ड','N':'ण',
+  'th':'थ','dh':'ध',
+  'sh':'श','Sh':'ष','ksh':'क्ष','shr':'श्र',
+  'ph':'फ','bh':'भ',
+  'k':'क','g':'ग','j':'ज','t':'त','d':'द','n':'न','p':'प','f':'फ','b':'ब','m':'म',
+  'y':'य','r':'र','l':'ल','v':'व','w':'व','s':'स','h':'ह'
+};
+const SPECIALS = { 'M':'ं','H':'ः' };
+
+function transliterate(buf){
+  let out = '';
+  let i = 0;
+  let pendingConsonant = false;
+  const n = buf.length;
+  while(i < n){
+    let matched = false;
+    for(let len=3; len>=1; len--){
+      if(i+len > n) continue;
+      const chunk = buf.substr(i, len);
+      if(Object.prototype.hasOwnProperty.call(CONSONANTS, chunk)){
+        if(pendingConsonant) out += '्';
+        out += CONSONANTS[chunk];
+        pendingConsonant = true;
+        i += len; matched = true; break;
+      }
+      if(Object.prototype.hasOwnProperty.call(VOWELS_INDEP, chunk)){
+        if(pendingConsonant){ out += VOWELS_MATRA[chunk]; pendingConsonant = false; }
+        else { out += VOWELS_INDEP[chunk]; }
+        i += len; matched = true; break;
+      }
+      if(Object.prototype.hasOwnProperty.call(SPECIALS, chunk)){
+        out += SPECIALS[chunk];
+        pendingConsonant = false;
+        i += len; matched = true; break;
+      }
+    }
+    if(!matched){ out += buf[i]; pendingConsonant = false; i += 1; }
+  }
+  return out;
+}
+
+let romanMode = true; // global toggle
+
+function attachTranslit(el){
+  const state = { start: null, raw: '' };
+  function reset(){ state.start = null; state.raw = ''; }
+
+  // True if the cursor sits inside an unclosed [Chord] tag — recomputed fresh
+  // from the actual text each time, so it needs no separate state to track.
+  function insideBracket(value, pos){
+    const before = value.slice(0, pos);
+    return before.lastIndexOf('[') > before.lastIndexOf(']');
+  }
+
+  el.addEventListener('input', (e)=>{
+    if(!romanMode) return;
+    const value = el.value;
+    const pos = el.selectionStart;
+
+    if(insideBracket(value, pos)){ reset(); return; }
+
+    const data = e.data;
+    const isWordChunk = typeof data === 'string' && data.length > 0 && /^[a-zA-Z']+$/.test(data);
+    if(!isWordChunk){ reset(); return; } // space/punctuation/backspace/newline — let it stand as typed
+
+    if(state.start === null){
+      state.start = pos - data.length;
+      state.raw = data;
+    } else {
+      state.raw += data;
+    }
+
+    const devanagari = transliterate(state.raw);
+    const newValue = value.slice(0, state.start) + devanagari + value.slice(pos);
+    el.value = newValue;
+    const newPos = state.start + devanagari.length;
+    el.setSelectionRange(newPos, newPos);
+    el.dispatchEvent(new Event('translitupdate'));
+  });
+
+  el.addEventListener('blur', reset);
+  el.addEventListener('click', reset);
+  el.addEventListener('keydown', (e)=>{
+    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(e.key)) reset();
+  });
+}
+
+/* ============================================================
+   2. STATE
+   ============================================================ */
+const SECTION_TYPES = ['Intro','Verse','Pre-Chorus','Chorus','Bridge','Interlude','Outro'];
+// Section type labels are shown in plain English everywhere (dropdowns and print).
+function typeLabel(type){ return type; }
+
+const DEVANAGARI_DIGITS = { '०':'0','१':'1','२':'2','३':'3','४':'4','५':'5','६':'6','७':'7','८':'8','९':'9' };
+const ARABIC_TO_DEVANAGARI_DIGITS = Object.fromEntries(Object.entries(DEVANAGARI_DIGITS).map(([np,ar])=>[ar,np]));
+function toDevanagariDigits(value){
+  return String(value).replace(/[0-9]/g, d => ARABIC_TO_DEVANAGARI_DIGITS[d] || d);
+}
+
+let songsIndex = [];   // [{id,title,updatedAt}]
+let currentSong = null; // {id,title,sections:[{id,type,text}]}
+let lastFocusedTextarea = null;
+let saveTimer = null;
+
+function uid(){ return 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+function newSongObj(){
+  return { id: uid(), title: '', number: null, info: '', sections: [ { id: uid(), type:'Verse', text:'' } ] };
+}
+
+function nextSongNumber(){
+  return songsIndex.reduce((m,s)=> Math.max(m, s.number || 0), 0) + 1;
+}
+
+/* ============================================================
+   3. PERSISTENCE
+   ============================================================ */
+async function loadIndex(){
+  const raw = await storeGet('geetbahi:index');
+  try{ songsIndex = raw ? JSON.parse(raw) : []; }catch(e){ songsIndex = []; }
+}
+async function saveIndex(){
+  await storeSet('geetbahi:index', JSON.stringify(songsIndex));
+}
+async function loadSong(id){
+  const raw = await storeGet('geetbahi:song:' + id);
+  try{ return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    if(!currentSong) return;
+    await storeSet('geetbahi:song:' + currentSong.id, JSON.stringify(currentSong));
+    const idxEntry = songsIndex.find(s=>s.id===currentSong.id);
+    if(idxEntry){
+      idxEntry.title = currentSong.title || 'शीर्षकविहीन गीत';
+      idxEntry.number = currentSong.number;
+      idxEntry.updatedAt = Date.now();
+      await saveIndex();
+      renderSongList();
+    }
+    if(dbFileHandle) await writeDatabaseFile();
+  }, 500);
+}
+
+/* ============================================================
+   4. RENDER: sidebar
+   ============================================================ */
+let songSearchQuery = '';
+
+function songMatchesQuery(entry, query){
+  if(!query) return true;
+  const q = query.trim().toLowerCase();
+  if(!q) return true;
+  const title = (entry.title || '').toLowerCase();
+  if(title.includes(q)) return true;
+  const numArabic = String(entry.number || '');
+  if(numArabic.includes(q)) return true;
+  const numDevanagari = toDevanagariDigits(entry.number || '');
+  if(numDevanagari && numDevanagari.includes(query.trim())) return true;
+  return false;
+}
+
+function renderSongList(){
+  const wrap = document.getElementById('songList');
+  wrap.innerHTML = '';
+  if(songsIndex.length === 0){
+    wrap.innerHTML = '<div class="empty-songs">कुनै गीत छैन।<br>“+ New song” थिच्नुहोस्।</div>';
+    return;
+  }
+  const filtered = songsIndex.filter(s => songMatchesQuery(s, songSearchQuery));
+  const sorted = [...filtered].sort((a,b)=> (a.number||0) - (b.number||0));
+  if(sorted.length === 0){
+    wrap.innerHTML = '<div class="empty-songs">कुनै मिल्दो गीत भेटिएन।<br>No songs match your search.</div>';
+    return;
+  }
+  for(const s of sorted){
+    const item = document.createElement('div');
+    item.className = 'song-item' + (currentSong && currentSong.id === s.id ? ' active' : '');
+    item.innerHTML = `<span class="name"><span class="num-badge">#${s.number || '?'}</span>${escapeHtml(s.title || 'शीर्षकविहीन गीत')}</span><button class="del" title="Delete">✕</button>`;
+    item.querySelector('.name').addEventListener('click', ()=> selectSong(s.id));
+    item.querySelector('.del').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      deleteSong(s.id);
+    });
+    wrap.appendChild(item);
+  }
+}
+
+function escapeHtml(str){
+  return (str||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ============================================================
+   5. RENDER: editor
+   ============================================================ */
+function parseChordLine(line){
+  const parts = line.split(/\[([^\]]*)\]/);
+  const chunks = [];
+  if(parts[0]) chunks.push({ chord:null, lyric:parts[0] });
+  for(let i=1;i<parts.length;i+=2){
+    chunks.push({ chord: parts[i], lyric: parts[i+1] || '' });
+  }
+  return chunks;
+}
+
+function buildPreviewHTML(text){
+  const lines = (text || '').split('\n');
+  const hasContent = text && text.trim().length > 0;
+  if(!hasContent) return '<div class="preview-empty">Preview appears here as you write…</div>';
+  let html = '';
+  for(const line of lines){
+    if(line.trim() === ''){ html += '<div class="pline">&nbsp;</div>'; continue; }
+    const chunks = parseChordLine(line);
+    html += '<div class="pline">';
+    for(const c of chunks){
+      const lyricSafe = escapeHtml(c.lyric) || '&nbsp;';
+      html += '<span class="chunk">';
+      if(c.chord !== null && c.chord !== undefined){
+        html += `<span class="chord">${escapeHtml(c.chord)}</span>`;
+      }
+      html += `<span class="lyric">${lyricSafe}</span></span>`;
+    }
+    html += '</div>';
+  }
+  return html;
+}
+
+function renderPreview(section, previewEl){
+  previewEl.innerHTML = buildPreviewHTML(section.text);
+}
+
+const NUMBERED_TYPES = ['Verse','Bridge','Pre-Chorus'];
+function sectionOrdinal(section, sections){
+  if(!NUMBERED_TYPES.includes(section.type)) return null;
+  const sameType = sections.filter(s=>s.type===section.type);
+  if(sameType.length <= 1) return null;
+  return sameType.findIndex(s=>s.id===section.id) + 1;
+}
+function sectionLabel(section, sections){
+  const ord = sectionOrdinal(section, sections);
+  const label = typeLabel(section.type);
+  return ord ? label + ' ' + ord : label;
+}
+
+function sectionBlockTemplate(section, index, total, allSections){
+  const block = document.createElement('div');
+  block.className = 'section-block';
+  block.dataset.id = section.id;
+  block.dataset.type = section.type;
+
+  const head = document.createElement('div');
+  head.className = 'section-head';
+  const ord = sectionOrdinal(section, allSections);
+  const opts = SECTION_TYPES.map(t => `<option value="${t}" ${t===section.type ? 'selected' : ''}>${typeLabel(t)}</option>`).join('');
+  head.innerHTML = `
+    <select class="section-type-select">${opts}</select>
+    ${ord ? `<span class="section-ordinal">#${ord}</span>` : ''}
+  `;
+  head.querySelector('.section-type-select').addEventListener('change', (e)=>{
+    section.type = e.target.value;
+    renderEditor();
+    scheduleSave();
+  });
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'lines-editor';
+  textarea.placeholder = '[C]गीतको बोल यहाँ लेख्नुहोस्...';
+  textarea.value = section.text || '';
+  textarea.rows = Math.max(3, section.text ? section.text.split('\n').length + 1 : 3);
+  textarea.setAttribute('autocapitalize', 'off');
+  textarea.setAttribute('autocorrect', 'off');
+  textarea.setAttribute('spellcheck', 'false');
+  attachTranslit(textarea);
+  textarea.addEventListener('focus', ()=> lastFocusedTextarea = textarea);
+  textarea.addEventListener('input', ()=> onSectionInput(textarea));
+  textarea.addEventListener('translitupdate', ()=> onSectionInput(textarea));
+
+  const previewOuter = document.createElement('div');
+  previewOuter.className = 'preview';
+  const previewInner = document.createElement('div');
+  previewOuter.appendChild(previewInner);
+
+  block.appendChild(head);
+  block.appendChild(textarea);
+  block.appendChild(previewOuter);
+
+  renderPreview(section, previewInner);
+  textarea._previewEl = previewInner;
+  textarea._sectionId = section.id;
+
+  return block;
+}
+
+function onSectionInput(textarea){
+  const section = currentSong.sections.find(s => s.id === textarea._sectionId);
+  if(!section) return;
+  section.text = textarea.value;
+  renderPreview(section, textarea._previewEl);
+  scheduleSave();
+}
+
+function renderEditor(){
+  document.getElementById('titleInput').value = currentSong.title || '';
+  document.getElementById('songNumberInput').value = currentSong.number || '';
+  document.getElementById('songInfoInput').value = currentSong.info || '';
+  const wrap = document.getElementById('sectionsWrap');
+  wrap.innerHTML = '';
+  currentSong.sections.forEach((sec, idx)=>{
+    wrap.appendChild(sectionBlockTemplate(sec, idx, currentSong.sections.length, currentSong.sections));
+  });
+  renderSongList();
+}
+
+/* ============================================================
+   6. ACTIONS
+   ============================================================ */
+async function selectSong(id){
+  const song = await loadSong(id);
+  if(!song) return;
+  currentSong = song;
+  lastFocusedTextarea = null;
+  if(!currentSong.number){
+    currentSong.number = nextSongNumber();
+    const idxEntry = songsIndex.find(s=>s.id===currentSong.id);
+    if(idxEntry) idxEntry.number = currentSong.number;
+    await storeSet('geetbahi:song:' + currentSong.id, JSON.stringify(currentSong));
+    await saveIndex();
+  }
+  renderEditor();
+}
+
+async function createSong(){
+  const song = newSongObj();
+  song.number = nextSongNumber();
+  songsIndex.push({ id: song.id, title: '', number: song.number, updatedAt: Date.now() });
+  await storeSet('geetbahi:song:' + song.id, JSON.stringify(song));
+  await saveIndex();
+  currentSong = song;
+  renderEditor();
+  if(dbFileHandle) await writeDatabaseFile();
+  return song;
+}
+
+async function deleteSong(id){
+  if(!confirm('यो गीत मेटाउने? Delete this song permanently?')) return;
+  songsIndex = songsIndex.filter(s=>s.id!==id);
+  await saveIndex();
+  await storeDelete('geetbahi:song:' + id);
+  if(currentSong && currentSong.id === id){
+    currentSong = null;
+    if(songsIndex.length){
+      await selectSong(songsIndex[0].id);
+    } else {
+      document.getElementById('titleInput').value='';
+      document.getElementById('sectionsWrap').innerHTML='';
+    }
+  }
+  renderSongList();
+  if(dbFileHandle) await writeDatabaseFile();
+}
+
+function addSection(){
+  const type = document.getElementById('sectionTypeSelect').value;
+  currentSong.sections.push({ id: uid(), type, text:'' });
+  renderEditor();
+  scheduleSave();
+}
+function removeSection(id){
+  if(currentSong.sections.length <= 1){ alert('कम्तिमा एउटा खण्ड चाहिन्छ। Keep at least one section.'); return; }
+  currentSong.sections = currentSong.sections.filter(s=>s.id!==id);
+  renderEditor();
+  scheduleSave();
+}
+function moveSection(id, dir){
+  const arr = currentSong.sections;
+  const i = arr.findIndex(s=>s.id===id);
+  const j = i + dir;
+  if(j < 0 || j >= arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  renderEditor();
+  scheduleSave();
+}
+
+/* ============================================================
+   6a. PRINTING (single or multiple songs by number)
+   ============================================================ */
+function parseNumberRanges(str){
+  const nums = new Set();
+  str.split(',').map(s=>s.trim()).filter(Boolean).forEach(tok=>{
+    const range = tok.match(/^(\d+)\s*-\s*(\d+)$/);
+    if(range){
+      let a = parseInt(range[1],10), b = parseInt(range[2],10);
+      if(a > b) [a,b] = [b,a];
+      for(let n=a; n<=b; n++) nums.add(n);
+    } else if(/^\d+$/.test(tok)){
+      nums.add(parseInt(tok,10));
+    }
+  });
+  return [...nums].sort((a,b)=>a-b);
+}
+
+function buildPrintSongHTML(song){
+  let html = `<div class="print-song"><div class="print-title"><span class="print-num">${song.number ? toDevanagariDigits(song.number) : ''}</span>${escapeHtml(song.title || 'शीर्षकविहीन गीत')}</div>`;
+  if(song.info) html += `<div class="print-info">${escapeHtml(song.info)}</div>`;
+  for(const sec of song.sections){
+    html += `<div class="section-block" data-type="${escapeHtml(sec.type)}">`
+         +  `<div class="section-head"><span class="section-pill">${escapeHtml(sectionLabel(sec, song.sections))}</span></div>`
+         +  `<div class="preview">${buildPreviewHTML(sec.text)}</div></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+async function printSongsByNumbers(numbers){
+  if(!numbers.length) return;
+  const entries = numbers.map(n => songsIndex.find(s=>s.number===n)).filter(Boolean);
+  const missing = numbers.filter(n => !songsIndex.find(s=>s.number===n));
+  if(entries.length === 0){
+    alert('गीत नं. ' + numbers.join(', ') + ' भेटिएन — no songs found with those numbers.');
+    return;
+  }
+  if(missing.length){
+    alert('गीत नं. ' + missing.join(', ') + ' भेटिएन, बाँकी प्रिन्ट हुँदैछ — those numbers weren\'t found, printing the rest.');
+  }
+  const songs = [];
+  for(const e of entries){ const s = await loadSong(e.id); if(s) songs.push(s); }
+  const wrap = document.getElementById('printMultiWrap');
+  wrap.innerHTML = songs.map(buildPrintSongHTML).join('');
+  document.body.classList.add('printing-multi');
+  setTimeout(()=> window.print(), 250);
+}
+
+window.addEventListener('afterprint', ()=>{
+  document.body.classList.remove('printing-multi');
+  document.getElementById('printMultiWrap').innerHTML = '';
+});
+
+/* ============================================================
+   6b. PHOTO → LYRICS (OCR)
+   ============================================================ */
+let tesseractLoadPromise = null;
+function ensureTesseract(){
+  if(window.Tesseract) return Promise.resolve();
+  if(tesseractLoadPromise) return tesseractLoadPromise;
+  tesseractLoadPromise = new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = ()=> resolve();
+    s.onerror = ()=> reject(new Error('OCR इन्जिन लोड हुन सकेन — इन्टरनेट जाँच्नुहोस्। Could not load the OCR engine — check your internet connection.'));
+    document.head.appendChild(s);
+  });
+  return tesseractLoadPromise;
+}
+
+async function runOCR(file, onProgress){
+  await ensureTesseract();
+  // Combined nep+eng: Nepali-only recognition was tried and made things much
+  // worse — the Nepali model isn't trained on Latin letters at all, so every
+  // chord line and the Key/Time/Intro line came out as hallucinated garbage
+  // instead of being read correctly. Combined mode occasionally misreads a
+  // single ambiguous Devanagari word as English (e.g. गर as "TR"), but that's
+  // a small, spottable error in the review screen — far better than gibberish
+  // on every chord and info line.
+  const { data } = await Tesseract.recognize(file, 'nep+eng', {
+    logger: (m)=>{ if(m && m.status) onProgress(m.status, m.progress || 0); }
+  });
+  return data.text || '';
+}
+
+// Grayscale + contrast boost (and upscaling of small images) noticeably
+// improves Tesseract's accuracy on photographed/screenshotted lyric sheets.
+function loadImageFromFile(file){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=> resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+async function preprocessImageForOCR(file){
+  try{
+    const img = await loadImageFromFile(file);
+    const scale = img.width < 1200 ? 2 : 1;
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = imgData.data;
+    for(let i=0; i<d.length; i+=4){
+      const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+      const boosted = Math.max(0, Math.min(255, (gray - 128) * 1.35 + 128));
+      d[i] = d[i+1] = d[i+2] = boosted;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    return await new Promise(resolve => canvas.toBlob(blob => resolve(blob || file), 'image/png'));
+  }catch(e){
+    return file; // if preprocessing fails for any reason, just OCR the original photo
+  }
+}
+
+// --- Chord-line + lyric-line -> inline [Chord] tag merging ---
+const CHORD_TOKEN_RE = /^[A-G](#|b)?(maj7|maj|min7|min|m7|m|dim7|dim|aug|sus4|sus2|sus|add9|add|6|7|9|11|13)?(\/[A-G](#|b)?)?$/i;
+const CHORD_SCAN_RE = /[A-G](#|b)?(maj7|maj|min7|min|m7|m|dim7|dim|aug|sus4|sus2|sus|add9|add|6|7|9|11|13)?(\/[A-G](#|b)?)?/g;
+const METADATA_RE = /^\s*(key|time|intro|outro|tempo|capo)\s*:/i;
+
+// OCR sometimes glues adjacent chords together with no space (e.g. "DEm" for
+// "D Em"). Try to cleanly split a token into a run of valid chords; if it
+// can't be fully accounted for, treat it as not a chord at all.
+function splitGluedChordToken(token){
+  if(CHORD_TOKEN_RE.test(token)) return [token];
+  const matches = [...token.matchAll(CHORD_SCAN_RE)].map(m => m[0]).filter(Boolean);
+  const rebuilt = matches.join('');
+  return (matches.length > 1 && rebuilt === token) ? matches : null;
+}
+
+// Returns the expanded chord list for a line if every token on it is a
+// (possibly glued) chord, otherwise null.
+function tokenizeChordLine(line){
+  const trimmed = line.trim();
+  if(!trimmed || METADATA_RE.test(trimmed)) return null;
+  const out = [];
+  for(const tok of trimmed.split(/\s+/)){
+    const split = splitGluedChordToken(tok);
+    if(!split) return null;
+    out.push(...split);
+  }
+  return out.length ? out : null;
+}
+function isChordLine(line){ return tokenizeChordLine(line) !== null; }
+function looksLikeLyricLine(line){
+  const trimmed = line.trim();
+  if(!trimmed || METADATA_RE.test(trimmed) || isChordLine(trimmed)) return false;
+  return /[\u0900-\u097F]/.test(trimmed) || trimmed.length > 3;
+}
+
+// OCR's plain-text output does not reliably preserve the original horizontal
+// spacing between a chord row and the lyric row below it, so aligning by
+// character column is fragile (it can land mid-word). Instead this spreads
+// the chords evenly across the lyric line's words, in order — a simpler,
+// predictable approximation that's easy to nudge by eye afterward.
+function mergeChordLineIntoLyric(chords, lyricLine){
+  const words = [...lyricLine.matchAll(/\S+/g)];
+  if(words.length === 0) return chords.map(c => '[' + c + ']').join('') + lyricLine;
+  const grouped = new Map();
+  chords.forEach((chord, i)=>{
+    const wordIdx = Math.min(words.length - 1, Math.floor(i * words.length / chords.length));
+    const at = words[wordIdx].index;
+    if(!grouped.has(at)) grouped.set(at, []);
+    grouped.get(at).push(chord);
+  });
+  let result = lyricLine;
+  for(const at of [...grouped.keys()].sort((a,b)=> b-a)){
+    result = result.slice(0, at) + grouped.get(at).map(c => '[' + c + ']').join('') + result.slice(at);
+  }
+  return result;
+}
+function mergeChordLines(body){
+  const lines = body.split('\n');
+  const out = [];
+  let i = 0;
+  while(i < lines.length){
+    const line = lines[i], next = lines[i+1];
+    const chords = tokenizeChordLine(line);
+    if(chords && next !== undefined && looksLikeLyricLine(next)){
+      out.push(mergeChordLineIntoLyric(chords, next));
+      i += 2;
+    } else if(METADATA_RE.test(line)){
+      i += 1; // drop song-info lines (Key/Time/Intro/etc.) entirely — not lyrics
+    } else {
+      out.push(line);
+      i += 1;
+    }
+  }
+  return out.join('\n');
+}
+
+function devanagariToArabicNumber(str){
+  const converted = str.replace(/[०-९]/g, d => DEVANAGARI_DIGITS[d]);
+  const n = parseInt(converted, 10);
+  return isNaN(n) ? null : n;
+}
+
+// A leading "1." / "(1)" / "१।" on the title line is the hymn/song catalog
+// number (e.g. hymn #1) — pull it out so it doesn't pollute the title text.
+function extractLeadingNumber(text){
+  const m = text.match(/^\s*[\(]?([0-9०-९]{1,3})[.)।]\s*(.*)$/);
+  if(m) return { number: devanagariToArabicNumber(m[1]), rest: m[2].trim() };
+  return { number: null, rest: text.trim() };
+}
+
+// First non-blank line is the title (with any leading hymn number split out).
+// Any metadata lines (Key:/Time:/Intro:/etc.) immediately after the title are
+// captured as the song's "info" line instead of being discarded. Everything
+// after that is the lyric body.
+function extractTitleAndBody(rawText){
+  const lines = rawText.split('\n');
+  let i = 0;
+  while(i < lines.length && lines[i].trim() === '') i++;
+  const firstLine = i < lines.length ? lines[i].trim() : '';
+  const { number, rest } = extractLeadingNumber(firstLine);
+  i++;
+  while(i < lines.length && lines[i].trim() === '') i++;
+  const infoLines = [];
+  while(i < lines.length && METADATA_RE.test(lines[i])){
+    infoLines.push(lines[i].trim());
+    i++;
+  }
+  const body = lines.slice(i).join('\n').trim();
+  return { title: rest, number, info: infoLines.join('  '), body };
+}
+
+// Splits the RAW (still un-merged) lyric body into blocks wherever a line
+// starts with a verse number like "1.", "1)", "(1)", or "१।" — done before any
+// chord-merging so a verse marker can never collide with a chord tag. Falls
+// back to blank-line splitting if no numbered markers are present at all. Only
+// a block that appears before the first numbered marker is flagged as a
+// "lead-in" (the hymnal's usual unlabeled refrain that comes before verse 1).
+const VERSE_MARKER_RE = /^\s*[\(]?([0-9०-९]{1,3})[.)।]\s*/;
+
+// A lone chord line sitting at the tail of one block — even across a blank
+// line — belongs with the section that comes right after it (it's the chord
+// row printed above that section's opening lyric), not the section it
+// trails. Move it across so it never gets attributed to the wrong verse/chorus.
+function carryTrailingChordLines(blocks){
+  for(let i = 0; i < blocks.length - 1; i++){
+    const lines = blocks[i].text.split('\n');
+    let j = lines.length - 1;
+    while(j >= 0 && lines[j].trim() === '') j--;
+    if(j >= 0 && isChordLine(lines[j])){
+      const chordLine = lines[j];
+      blocks[i].text = lines.slice(0, j).join('\n').trim();
+      blocks[i+1].text = (chordLine + '\n' + blocks[i+1].text).trim();
+    }
+  }
+  return blocks.filter(b => b.text.length > 0);
+}
+
+function splitRawVerses(body){
+  const lines = body.split('\n');
+  const hasMarkers = lines.some(l => VERSE_MARKER_RE.test(l));
+  let blocks;
+  if(!hasMarkers){
+    blocks = body.split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean).map(text => ({ text, leadIn:false }));
+  } else {
+    blocks = [];
+    let current = [];
+    let seenMarker = false;
+    for(const line of lines){
+      if(VERSE_MARKER_RE.test(line)){
+        if(current.length){ const t = current.join('\n').trim(); if(t) blocks.push({ text:t, leadIn: !seenMarker }); }
+        current = [ line.replace(VERSE_MARKER_RE, '') ];
+        seenMarker = true;
+      } else {
+        current.push(line);
+      }
+    }
+    if(current.length){ const t = current.join('\n').trim(); if(t) blocks.push({ text:t, leadIn: !seenMarker }); }
+    blocks = blocks.filter(b => b.text.length > 0);
+  }
+  return carryTrailingChordLines(blocks);
+}
+
+// blocks: [{ text, leadIn }] — a genuine lead-in block (only possible when
+// numbered verses exist) defaults to Chorus; everything else defaults to
+// Verse unless its text repeats verbatim elsewhere, which suggests Chorus.
+function guessBlockTypes(blocks){
+  const norm = t => t.replace(/\s+/g,' ').trim().toLowerCase();
+  const counts = new Map();
+  blocks.forEach(b => { const k = norm(b.text); counts.set(k, (counts.get(k)||0)+1); });
+  return blocks.map(b => {
+    if(b.leadIn) return 'Chorus';
+    return counts.get(norm(b.text)) > 1 ? 'Chorus' : 'Verse';
+  });
+}
+
+function openOcrModal(){ document.getElementById('ocrModal').classList.add('open'); }
+function closeOcrModal(){
+  document.getElementById('ocrModal').classList.remove('open');
+  document.getElementById('photoFileInput').value = '';
+}
+
+async function handlePhotoSelected(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  openOcrModal();
+  const body = document.getElementById('ocrModalBody');
+  const imgUrl = URL.createObjectURL(file);
+  body.innerHTML = `
+    <img src="${imgUrl}" class="ocr-thumb" alt="uploaded photo">
+    <div class="ocr-status" id="ocrStatus">फोटो तयार गर्दै... preparing photo…</div>
+    <div class="ocr-progress"><div class="ocr-progress-bar" id="ocrProgressBar"></div></div>
+  `;
+  try{
+    const processed = await preprocessImageForOCR(file);
+    const rawText = await runOCR(processed, (status, progress)=>{
+      const s = document.getElementById('ocrStatus');
+      const bar = document.getElementById('ocrProgressBar');
+      if(s) s.textContent = status.replace(/_/g,' ') + '…';
+      if(bar) bar.style.width = Math.round(progress*100) + '%';
+    });
+    const { title, number, info, body: lyricsBody } = extractTitleAndBody(rawText);
+    const rawBlocks = splitRawVerses(lyricsBody);
+    const blocks = rawBlocks.map(b => ({ text: mergeChordLines(b.text), leadIn: b.leadIn }));
+    showOcrReview(title, number, info, blocks);
+  }catch(err){
+    body.innerHTML = `
+      <div class="ocr-status" style="color:var(--danger)">${escapeHtml(err.message || 'OCR failed.')}</div>
+      <div class="ocr-hint">Tip: this works best when the file is opened directly in your browser (not a restricted preview), with a clear photo of printed or neatly written text.</div>
+      <div class="ocr-actions"><button class="icon-btn" id="ocrErrClose">Close</button></div>`;
+    document.getElementById('ocrErrClose').addEventListener('click', closeOcrModal);
+  }
+}
+
+function showOcrReview(detectedTitle, detectedNumber, detectedInfo, blocks){
+  if(blocks.length === 0){
+    document.getElementById('ocrModalBody').innerHTML = `
+      <div class="ocr-status">कुनै बोल फेला परेन — no lyrics could be read from that photo. Try a clearer, well-lit photo.</div>
+      <div class="ocr-actions"><button class="icon-btn" id="ocrErrClose2">Close</button></div>`;
+    document.getElementById('ocrErrClose2').addEventListener('click', closeOcrModal);
+    return;
+  }
+  const guesses = guessBlockTypes(blocks);
+  const body = document.getElementById('ocrModalBody');
+  body.innerHTML = `
+    <div class="ocr-hint">Review before importing: OCR misreads happen (wrong letters, stray symbols), and chords are spread evenly across each line's words rather than pinned to an exact pixel, so nudge anything that landed off. Fix typos and adjust each block's type below.</div>
+    <div style="display:flex;gap:10px;margin-bottom:8px;">
+      <label style="flex:1;">
+        <div style="font-size:11px;color:var(--ink-dim);margin-bottom:4px;">Song title</div>
+        <input type="text" id="ocrTitleInput" value="${escapeHtml(detectedTitle)}" style="width:100%;box-sizing:border-box;background:var(--bg-deep);border:1px solid rgba(212,169,74,0.3);color:var(--ink);border-radius:6px;padding:8px 10px;font-family:'Noto Serif Devanagari',serif;font-size:15px;">
+      </label>
+      <label style="width:80px;">
+        <div style="font-size:11px;color:var(--ink-dim);margin-bottom:4px;">Song #</div>
+        <input type="number" id="ocrNumberInput" min="1" value="${detectedNumber || ''}" style="width:100%;box-sizing:border-box;background:var(--bg-deep);border:1px solid rgba(212,169,74,0.3);color:var(--ink);border-radius:6px;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:14px;text-align:center;">
+      </label>
+    </div>
+    <label style="display:block;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--ink-dim);margin-bottom:4px;">Key / Time / Intro (kept as-is, in English)</div>
+      <input type="text" id="ocrInfoInput" value="${escapeHtml(detectedInfo || '')}" style="width:100%;box-sizing:border-box;background:var(--bg-deep);border:1px solid rgba(212,169,74,0.3);color:var(--gold-hi);border-radius:6px;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:12.5px;">
+    </label>
+    <div id="ocrBlocks"></div>
+    <div class="ocr-actions">
+      <label><input type="checkbox" id="ocrAsNewSong" checked> Create as a new song</label>
+      <button class="icon-btn" id="ocrCancelBtn2">Cancel</button>
+      <button class="btn-new" id="ocrImportBtn">Import into song</button>
+    </div>`;
+  const blocksWrap = document.getElementById('ocrBlocks');
+  blocks.forEach((b, i)=>{
+    const row = document.createElement('div');
+    row.className = 'ocr-block';
+    const opts = SECTION_TYPES.map(t => `<option value="${t}" ${t===guesses[i] ? 'selected' : ''}>${typeLabel(t)}</option>`).join('');
+    row.innerHTML = `<select class="ocr-type">${opts}</select><textarea class="ocr-text">${escapeHtml(b.text)}</textarea>`;
+    blocksWrap.appendChild(row);
+  });
+  document.getElementById('ocrCancelBtn2').addEventListener('click', closeOcrModal);
+  document.getElementById('ocrImportBtn').addEventListener('click', async ()=>{
+    const rows = blocksWrap.querySelectorAll('.ocr-block');
+    const newSections = Array.from(rows).map(r => ({
+      id: uid(),
+      type: r.querySelector('.ocr-type').value,
+      text: r.querySelector('.ocr-text').value.trim()
+    })).filter(s => s.text.length > 0);
+    if(newSections.length === 0){ closeOcrModal(); return; }
+
+    const titleVal = document.getElementById('ocrTitleInput').value.trim();
+    const numberVal = parseInt(document.getElementById('ocrNumberInput').value, 10) || null;
+    const infoVal = document.getElementById('ocrInfoInput').value.trim();
+    const asNew = document.getElementById('ocrAsNewSong').checked;
+    if(asNew || !currentSong){
+      await createSong();
+      currentSong.title = titleVal;
+      if(numberVal) currentSong.number = numberVal;
+      currentSong.info = infoVal;
+      currentSong.sections = newSections;
+    } else if(currentSong.sections.length === 1 && !currentSong.sections[0].text.trim()){
+      currentSong.sections = newSections;
+      if(!currentSong.title && titleVal) currentSong.title = titleVal;
+      if(!currentSong.info && infoVal) currentSong.info = infoVal;
+    } else {
+      currentSong.sections.push(...newSections);
+      if(!currentSong.title && titleVal) currentSong.title = titleVal;
+      if(!currentSong.info && infoVal) currentSong.info = infoVal;
+    }
+    renderEditor();
+    scheduleSave();
+    closeOcrModal();
+  });
+}
+
+/* ============================================================
+   7. INIT & WIRE-UP
+   ============================================================ */
+async function init(){
+  if(!hasFileSystemAccessAPI){
+    // Browser genuinely doesn't support the File System Access API at all.
+    document.getElementById('saveFileBtn').style.display = 'none';
+    document.getElementById('openFileBtn').style.display = 'none';
+  } else if(isEmbeddedFrame){
+    // The API exists, but browsers block it inside a cross-origin iframe
+    // (e.g. this page embedded on a Wix/Squarespace site) — every call fails
+    // immediately with a generic error. Explain that clearly instead.
+    const explainEmbedded = ()=> alert('यो पेज कुनै अर्को साइटमा इम्बेड (embed) गरिएकोले फाइल Save/Open ब्राउजरले नै रोक्छ — यो एपको समस्या होइन। तपाईंका गीतहरू यस ब्राउजरमा स्वतः सुरक्षित हुँदैछन्।\n\nBrowsers block file Save/Open for embedded pages like this one (it\'s a browser security rule, not a bug in the app). Your songs are still auto-saving in this browser either way. To use Save/Open, open this file on its own — not inside an embed — e.g. download it and open it directly, or visit it as its own page/tab.');
+    document.getElementById('saveFileBtn').addEventListener('click', explainEmbedded);
+    document.getElementById('openFileBtn').addEventListener('click', explainEmbedded);
+    setDbStatus('Songs auto-save in this browser. (Save/Open needs this page opened on its own — tap Save for why.)');
+  } else {
+    document.getElementById('saveFileBtn').addEventListener('click', saveSongFileExplicit);
+    document.getElementById('openFileBtn').addEventListener('click', openSongFileExplicit);
+  }
+
+  document.getElementById('newSongBtn').addEventListener('click', createSong);
+  document.getElementById('sidebarCollapseBtn').addEventListener('click', ()=>{
+    const browser = document.getElementById('songBrowser');
+    const btn = document.getElementById('sidebarCollapseBtn');
+    const nowVisible = browser.classList.toggle('mobile-visible');
+    btn.querySelector('.btn-text').textContent = nowVisible ? 'Hide song list' : 'Show song list';
+  });
+  const searchInput = document.getElementById('songSearchInput');
+  searchInput.addEventListener('input', ()=>{
+    songSearchQuery = searchInput.value;
+    renderSongList();
+  });
+  attachTranslit(searchInput);
+  searchInput.addEventListener('translitupdate', ()=>{
+    songSearchQuery = searchInput.value;
+    renderSongList();
+  });
+  document.getElementById('titleInput').addEventListener('input', (e)=>{
+    if(!currentSong) return;
+    currentSong.title = e.target.value;
+    scheduleSave();
+  });
+  attachTranslit(document.getElementById('titleInput'));
+  document.getElementById('titleInput').addEventListener('translitupdate', ()=>{
+    currentSong.title = document.getElementById('titleInput').value;
+    scheduleSave();
+  });
+
+  document.getElementById('songNumberInput').addEventListener('change', (e)=>{
+    if(!currentSong) return;
+    const val = parseInt(e.target.value, 10);
+    currentSong.number = val > 0 ? val : nextSongNumber();
+    e.target.value = currentSong.number;
+    const dup = songsIndex.find(s => s.id !== currentSong.id && s.number === currentSong.number);
+    if(dup) alert('गीत नं. ' + currentSong.number + ' पहिल्यै "' + (dup.title||'शीर्षकविहीन') + '" मा प्रयोग भइसकेको छ। That number is already used by another song — both will keep it unless you change one.');
+    scheduleSave();
+  });
+  document.getElementById('songInfoInput').addEventListener('input', (e)=>{
+    if(!currentSong) return;
+    currentSong.info = e.target.value;
+    scheduleSave();
+  });
+
+  document.getElementById('addSectionBtn').addEventListener('click', ()=>{ if(currentSong) addSection(); });
+  document.getElementById('printBtn').addEventListener('click', ()=>{
+    if(!currentSong) return;
+    printSongsByNumbers([currentSong.number]);
+  });
+  document.getElementById('importPhotoBtn').addEventListener('click', ()=> document.getElementById('photoFileInput').click());
+  document.getElementById('photoFileInput').addEventListener('change', handlePhotoSelected);
+  document.getElementById('ocrCloseBtn').addEventListener('click', closeOcrModal);
+  document.getElementById('printByNumberBtn').addEventListener('click', ()=>{
+    const raw = document.getElementById('printNumberInput').value.trim();
+    if(!raw){ alert('गीत नं. लेख्नुहोस् (e.g. 1,3,5-8) — enter one or more song numbers.'); return; }
+    printSongsByNumbers(parseNumberRanges(raw));
+  });
+
+  document.getElementById('modeToggle').addEventListener('click', (e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    romanMode = btn.dataset.mode === 'roman';
+    document.querySelectorAll('#modeToggle button').forEach(b=>b.classList.toggle('active', b===btn));
+  });
+
+  const autoConnected = await tryAutoConnectFile();
+  if(!autoConnected){
+    await loadIndex();
+    if(songsIndex.length){
+      const sorted = [...songsIndex].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+      await selectSong(sorted[0].id);
+    } else {
+      await createSong();
+    }
+    if(supportsFileSystemAccess) setDbStatus('Songs auto-save in this browser. You can also sync to a file below.');
+  }
+}
+
+init();
+
+})();
+</script>
+</body>
+</html>
